@@ -1,0 +1,201 @@
+if game.GameId ~= 10563114921 then
+	return
+end
+
+if not game:IsLoaded() then
+	game.Loaded:Wait()
+end
+
+local Players = game:GetService("Players")
+
+local Player = Players.LocalPlayer
+
+--// SETTINGS
+local Speed = 250
+local BaseNumber = 10
+local Stopped = false
+
+--// RAYFIELD
+local Rayfield = loadstring(game:HttpGet(
+	"https://sirius.menu/rayfield"
+))()
+
+local Window = Rayfield:CreateWindow({
+	Name = "Egg Stealer",
+	LoadingTitle = "Egg Stealer",
+	LoadingSubtitle = "Private Test",
+	ConfigurationSaving = {
+		Enabled = false
+	}
+})
+
+local Main = Window:CreateTab("Main", 4483362458)
+
+--// CHARACTER
+local function getRoot()
+	local character = Player.Character
+
+	if not character then
+		return nil
+	end
+
+	return character:FindFirstChild("HumanoidRootPart")
+end
+
+--// BASE
+local function getBase()
+	local bases = workspace.World.Build.MainMap.Bases:GetChildren()
+	return bases[BaseNumber]
+end
+
+local function getTarget()
+	local base = getBase()
+
+	if not base then
+		return nil
+	end
+
+	if base:IsA("BasePart") then
+		return base
+	end
+
+	if base.PrimaryPart then
+		return base.PrimaryPart
+	end
+
+	return base:FindFirstChildWhichIsA("BasePart", true)
+end
+
+--// STOP
+local function stopGlide()
+	Stopped = true
+end
+
+--// GLIDE
+local function glideToBase()
+	local root = getRoot()
+	local target = getTarget()
+
+	if not root or not target then
+		Rayfield:Notify({
+			Title = "Error",
+			Content = "Base #" .. BaseNumber .. " was not found.",
+			Duration = 3
+		})
+		return
+	end
+
+	Stopped = false
+
+	local targetPosition = target.Position + Vector3.new(0, 4, 0)
+
+	while root.Parent and not Stopped do
+		local distance = (root.Position - targetPosition).Magnitude
+
+		if distance <= 2 then
+			root.CFrame = CFrame.new(targetPosition)
+			break
+		end
+
+		local currentSpeed
+
+		-- Very close
+		if distance <= 10 then
+			currentSpeed = 30
+
+		-- Close
+		elseif distance <= 35 then
+			currentSpeed = 60
+
+		-- Near
+		elseif distance <= 45 then
+			currentSpeed = 100
+
+		-- Far
+		else
+			currentSpeed = Speed
+		end
+
+		local direction =
+			(targetPosition - root.Position).Unit
+
+		local dt = task.wait()
+
+		local movement =
+			math.min(currentSpeed * dt, distance)
+
+		root.CFrame = CFrame.new(
+			root.Position + direction * movement
+		)
+	end
+end
+
+--// STEAL EGG
+local function stealEgg()
+	glideToBase()
+end
+
+--// STEAL BUTTON
+Main:CreateButton({
+	Name = "🥚 Steal Egg",
+	Callback = function()
+		task.spawn(stealEgg)
+	end
+})
+
+--// GO TO BASE
+Main:CreateButton({
+	Name = "📍 Go To Base",
+	Callback = function()
+		task.spawn(glideToBase)
+	end
+})
+
+--// STOP
+Main:CreateButton({
+	Name = "⛔ Stop Glide",
+	Callback = function()
+		stopGlide()
+	end
+})
+
+--// SPEED SLIDER
+Main:CreateSlider({
+	Name = "Glide Speed",
+	Range = {100, 500},
+	Increment = 10,
+	Suffix = " studs/s",
+	CurrentValue = Speed,
+	Flag = "GlideSpeed",
+
+	Callback = function(value)
+		Speed = value
+	end
+})
+
+--// BASE INPUT
+Main:CreateInput({
+	Name = "Base Number",
+	PlaceholderText = "10",
+	RemoveTextAfterFocusLost = false,
+
+	Callback = function(value)
+		local number = tonumber(value)
+
+		if number then
+			BaseNumber = math.max(1, math.floor(number))
+
+			Rayfield:Notify({
+				Title = "Base Selected",
+				Content = "Base #" .. BaseNumber,
+				Duration = 2
+			})
+		end
+	end
+})
+
+Rayfield:Notify({
+	Title = "Egg Stealer",
+	Content = "Loaded successfully!",
+	Duration = 3
+})
