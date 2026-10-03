@@ -1,201 +1,1666 @@
-if game.GameId ~= 10563114921 then
-	return
-end
+**if** **not** game:**IsLoaded**() **then**
 
-if not game:IsLoaded() then
-	game.Loaded:Wait()
-end
+    game.**Loaded**:**Wait**()
 
-local Players = game:GetService("Players")
+**end**
 
-local Player = Players.LocalPlayer
+*--==================================================*
 
---// SETTINGS
-local Speed = 250
-local BaseNumber = 10
-local Stopped = false
+*-- SERVICES*
 
---// RAYFIELD
-local Rayfield = loadstring(game:HttpGet(
-	"https://sirius.menu/rayfield"
-))()
+*--==================================================*
 
-local Window = Rayfield:CreateWindow({
-	Name = "Egg Stealer",
-	LoadingTitle = "Egg Stealer",
-	LoadingSubtitle = "Private Test",
-	ConfigurationSaving = {
-		Enabled = false
-	}
+**local** Players = game:**GetService**("Players")
+
+**local** RunService = game:**GetService**("RunService")
+
+**local** UIS = game:**GetService**("UserInputService")
+
+**local** LocalPlayer = Players.**LocalPlayer**
+
+*--==================================================*
+
+*-- RAYFIELD*
+
+*--==================================================*
+
+**local** Rayfield = **loadstring**(game:**HttpGet**("https\://sirius.menu/rayfield"))()
+
+**local** Window = Rayfield:**CreateWindow**({
+
+    Name = "KerryHub",
+
+    LoadingTitle = "KerryHub",
+
+    LoadingSubtitle = "Premium interface",
+
+    ConfigurationSaving = {
+
+        Enabled = **false**
+
+    },
+
+    Discord = {
+
+        Enabled = **false**
+
+    },
+
+    KeySystem = **false**
+
 })
 
-local Main = Window:CreateTab("Main", 4483362458)
+*--==================================================*
 
---// CHARACTER
-local function getRoot()
-	local character = Player.Character
+*-- TABS*
 
-	if not character then
-		return nil
-	end
+*--==================================================*
 
-	return character:FindFirstChild("HumanoidRootPart")
-end
+**local** CFrameTab = Window:**CreateTab**("CFrame", 4483362458)
 
---// BASE
-local function getBase()
-	local bases = workspace.World.Build.MainMap.Bases:GetChildren()
-	return bases[BaseNumber]
-end
+**local** VisualTab = Window:**CreateTab**("Visual", 4483362458)
 
-local function getTarget()
-	local base = getBase()
+**local** AutoFarmTab = Window:**CreateTab**("Auto Farm", 4483362458)
 
-	if not base then
-		return nil
-	end
+**local** InfoTab = Window:**CreateTab**("Info", 4483362458)
 
-	if base:IsA("BasePart") then
-		return base
-	end
+*--==================================================*
 
-	if base.PrimaryPart then
-		return base.PrimaryPart
-	end
+*-- CHARACTER*
 
-	return base:FindFirstChildWhichIsA("BasePart", true)
-end
+*--==================================================*
 
---// STOP
-local function stopGlide()
-	Stopped = true
-end
+**local** Character
 
---// GLIDE
-local function glideToBase()
-	local root = getRoot()
-	local target = getTarget()
+**local** RootPart
 
-	if not root or not target then
-		Rayfield:Notify({
-			Title = "Error",
-			Content = "Base #" .. BaseNumber .. " was not found.",
-			Duration = 3
-		})
-		return
-	end
+**local** Humanoid
 
-	Stopped = false
+**local** **function** **SetupCharacter**(Char)
 
-	local targetPosition = target.Position + Vector3.new(0, 4, 0)
+    Character = Char
 
-	while root.Parent and not Stopped do
-		local distance = (root.Position - targetPosition).Magnitude
+    RootPart = Char:**WaitForChild**(
 
-		if distance <= 2 then
-			root.CFrame = CFrame.new(targetPosition)
-			break
-		end
+        "HumanoidRootPart",
 
-		local currentSpeed
+        10
 
-		-- Very close
-		if distance <= 10 then
-			currentSpeed = 30
+    )
 
-		-- Close
-		elseif distance <= 35 then
-			currentSpeed = 60
+    Humanoid = Char:**FindFirstChildOfClass**("Humanoid")
 
-		-- Near
-		elseif distance <= 45 then
-			currentSpeed = 100
+**end**
 
-		-- Far
-		else
-			currentSpeed = Speed
-		end
+**if** LocalPlayer.**Character** **then**
 
-		local direction =
-			(targetPosition - root.Position).Unit
+    **SetupCharacter**(LocalPlayer.**Character**)
 
-		local dt = task.wait()
+**end**
 
-		local movement =
-			math.min(currentSpeed * dt, distance)
+*--==================================================*
 
-		root.CFrame = CFrame.new(
-			root.Position + direction * movement
-		)
-	end
-end
+*-- CFRAME SPEED*
 
---// STEAL EGG
-local function stealEgg()
-	glideToBase()
-end
+*--==================================================*
 
---// STEAL BUTTON
-Main:CreateButton({
-	Name = "🥚 Steal Egg",
-	Callback = function()
-		task.spawn(stealEgg)
-	end
+**local** CFrameEnabled = **false**
+
+**local** CFrameSpeed = 100
+
+CFrameTab:**CreateToggle**({
+
+    Name = "CFrame Speed",
+
+    CurrentValue = **false**,
+
+    Flag = "CFrameSpeed",
+
+    Callback = **function**(Value)
+
+        CFrameEnabled = Value
+
+    **end**
+
 })
 
---// GO TO BASE
-Main:CreateButton({
-	Name = "📍 Go To Base",
-	Callback = function()
-		task.spawn(glideToBase)
-	end
+CFrameTab:**CreateSlider**({
+
+    Name = "Speed",
+
+    Range = {0, 1000},
+
+    Increment = 1,
+
+    Suffix = " Speed",
+
+    CurrentValue = 100,
+
+    Flag = "CFrameSpeedValue",
+
+    Callback = **function**(Value)
+
+        CFrameSpeed = Value
+
+    **end**
+
 })
 
---// STOP
-Main:CreateButton({
-	Name = "⛔ Stop Glide",
-	Callback = function()
-		stopGlide()
-	end
+**local** Keys = {
+
+    W = **false**,
+
+    A = **false**,
+
+    S = **false**,
+
+    D = **false**
+
+}
+
+UIS.**InputBegan**:**Connect**(**function**(Input, GameProcessed)
+
+    **if** GameProcessed **then**
+
+        **return**
+
+    **end**
+
+    **if** Input.**KeyCode** == Enum.**KeyCode**.**W** **then**
+
+        Keys.**W** = **true**
+
+    **elseif** Input.**KeyCode** == Enum.**KeyCode**.**A** **then**
+
+        Keys.**A** = **true**
+
+    **elseif** Input.**KeyCode** == Enum.**KeyCode**.**S** **then**
+
+        Keys.**S** = **true**
+
+    **elseif** Input.**KeyCode** == Enum.**KeyCode**.**D** **then**
+
+        Keys.**D** = **true**
+
+    **end**
+
+**end**)
+
+UIS.**InputEnded**:**Connect**(**function**(Input)
+
+    **if** Input.**KeyCode** == Enum.**KeyCode**.**W** **then**
+
+        Keys.**W** = **false**
+
+    **elseif** Input.**KeyCode** == Enum.**KeyCode**.**A** **then**
+
+        Keys.**A** = **false**
+
+    **elseif** Input.**KeyCode** == Enum.**KeyCode**.**S** **then**
+
+        Keys.**S** = **false**
+
+    **elseif** Input.**KeyCode** == Enum.**KeyCode**.**D** **then**
+
+        Keys.**D** = **false**
+
+    **end**
+
+**end**)
+
+RunService.**RenderStepped**:**Connect**(**function**()
+
+    **if** **not** CFrameEnabled **then**
+
+        **return**
+
+    **end**
+
+    **if** **not** Character **or** **not** RootPart **then**
+
+        **return**
+
+    **end**
+
+    **local** Camera = workspace.**CurrentCamera**
+
+    **if** **not** Camera **then**
+
+        **return**
+
+    **end**
+
+    **local** Direction = Vector3.**zero**
+
+    **if** Keys.**W** **then**
+
+        Direction += Camera.**CFrame**.**LookVector**
+
+    **end**
+
+    **if** Keys.**S** **then**
+
+        Direction -= Camera.**CFrame**.**LookVector**
+
+    **end**
+
+    **if** Keys.**A** **then**
+
+        Direction -= Camera.**CFrame**.**RightVector**
+
+    **end**
+
+    **if** Keys.**D** **then**
+
+        Direction += Camera.**CFrame**.**RightVector**
+
+    **end**
+
+    Direction = Vector3.**new**(
+
+        Direction.**X**,
+
+        0,
+
+        Direction.**Z**
+
+    )
+
+    **if** Direction.**Magnitude** > 0 **then**
+
+        Direction = Direction.**Unit**
+
+        Character:**PivotTo**(
+
+            Character:**GetPivot**()
+
+            + Direction \* (CFrameSpeed \* 0.01)
+
+        )
+
+    **end**
+
+**end**)
+
+*--==================================================*
+
+*-- EGG FOLDER*
+
+*--==================================================*
+
+**local** **function** **GetEggFolder**()
+
+    **return** workspace:**FindFirstChild**(
+
+        "AreaEggSlotsClient"
+
+    )
+
+**end**
+
+**local** **function** **GetAllEggs**()
+
+    **local** Folder = **GetEggFolder**()
+
+    **if** **not** Folder **then**
+
+        **return** {}
+
+    **end**
+
+    **local** Eggs = {}
+
+    **for** \_, Object **in** **ipairs**(Folder:**GetChildren**()) **do**
+
+        **if** Object:**IsA**("Model") **then**
+
+            table.**insert**(Eggs, Object)
+
+        **end**
+
+    **end**
+
+    **return** Eggs
+
+**end**
+
+*--==================================================*
+
+*-- EGG SIZE*
+
+*--==================================================*
+
+**local** **function** **GetEggVolume**(Egg)
+
+    **if** **not** Egg **or** **not** Egg:**IsA**("Model") **then**
+
+        **return** 0
+
+    **end**
+
+    **local** Success, Size = **pcall**(**function**()
+
+        **return** Egg:**GetExtentsSize**()
+
+    **end**)
+
+    **if** **not** Success **or** **not** Size **then**
+
+        **return** 0
+
+    **end**
+
+    **return** Size.**X** \* Size.**Y** \* Size.**Z**
+
+**end**
+
+*--==================================================*
+
+*-- EGG PART*
+
+*--==================================================*
+
+**local** **function** **GetEggPart**(Egg)
+
+    **if** **not** Egg **then**
+
+        **return** **nil**
+
+    **end**
+
+    **if** Egg:**IsA**("Model") **and** Egg.**PrimaryPart** **then**
+
+        **return** Egg.**PrimaryPart**
+
+    **end**
+
+    **for** \_, Object **in** **ipairs**(Egg:**GetDescendants**()) **do**
+
+        **if** Object:**IsA**("BasePart") **then**
+
+            **return** Object
+
+        **end**
+
+    **end**
+
+    **return** **nil**
+
+**end**
+
+*--==================================================*
+
+*-- PARASITE EGG*
+
+*--==================================================*
+
+**local** **function** **IsParasiteEgg**(Egg)
+
+    **if** **not** Egg **then**
+
+        **return** **false**
+
+    **end**
+
+    **for** \_, Object **in** **ipairs**(Egg:**GetDescendants**()) **do**
+
+        **if** Object.**Name** == "MonsterParasiteVisual" **then**
+
+            **return** **true**
+
+        **end**
+
+    **end**
+
+    **return** **false**
+
+**end**
+
+*--==================================================*
+
+*-- SECRET EGG*
+
+*--==================================================*
+
+**local** **function** **IsSecretEgg**(Egg)
+
+    **if** **not** Egg **then**
+
+        **return** **false**
+
+    **end**
+
+    **for** \_, Object **in** **ipairs**(Egg:**GetDescendants**()) **do**
+
+        **if** Object:**IsA**("ParticleEmitter")
+
+            **or** Object:**IsA**("Beam")
+
+            **or** Object:**IsA**("Trail")
+
+            **or** Object:**IsA**("Fire")
+
+            **or** Object:**IsA**("Smoke")
+
+            **or** Object:**IsA**("Sparkles") **then**
+
+            **return** **true**
+
+        **end**
+
+        **if** string.**find**(
+
+            string.**lower**(Object.**Name**),
+
+            "fx",
+
+            1,
+
+            **true**
+
+        ) **then**
+
+            **return** **true**
+
+        **end**
+
+    **end**
+
+    **return** **false**
+
+**end**
+
+*--==================================================*
+
+*-- TARGET FINDERS*
+
+*--==================================================*
+
+**local** **function** **GetBiggestEgg**()
+
+    **local** Biggest = **nil**
+
+    **local** BiggestVolume = -math.**huge**
+
+    **for** \_, Egg **in** **ipairs**(**GetAllEggs**()) **do**
+
+        **local** Volume = **GetEggVolume**(Egg)
+
+        **if** Volume > BiggestVolume **then**
+
+            BiggestVolume = Volume
+
+            Biggest = Egg
+
+        **end**
+
+    **end**
+
+    **return** Biggest
+
+**end**
+
+**local** **function** **GetParasiteEgg**()
+
+    **for** \_, Egg **in** **ipairs**(**GetAllEggs**()) **do**
+
+        **if** **IsParasiteEgg**(Egg) **then**
+
+            **return** Egg
+
+        **end**
+
+    **end**
+
+    **return** **nil**
+
+**end**
+
+**local** **function** **GetSecretEgg**()
+
+    **for** \_, Egg **in** **ipairs**(**GetAllEggs**()) **do**
+
+        **if** **IsSecretEgg**(Egg) **then**
+
+            **return** Egg
+
+        **end**
+
+    **end**
+
+    **return** **nil**
+
+**end**
+
+*--==================================================*
+
+*-- AUTO FARM STATE*
+
+*--==================================================*
+
+**local** AutoFarm = {
+
+    Enabled = **false**,
+
+    Running = **false**,
+
+    Mode = "Biggest Egg",
+
+    Target = **nil**,
+
+    Destination = **nil**,
+
+    CycleId = 0
+
+}
+
+**local** **function** **GetTargetEgg**()
+
+    **if** AutoFarm.**Mode** == "Biggest Egg" **then**
+
+        **return** **GetBiggestEgg**()
+
+    **end**
+
+    **if** AutoFarm.**Mode** == "Parasite Egg" **then**
+
+        **return** **GetParasiteEgg**()
+
+    **end**
+
+    **if** AutoFarm.**Mode** == "Secret Egg" **then**
+
+        **return** **GetSecretEgg**()
+
+    **end**
+
+    **return** **nil**
+
+**end**
+
+*--==================================================*
+
+*-- ESP*
+
+*--==================================================*
+
+**local** ESP = {
+
+    Biggest = **false**,
+
+    Parasite = **false**,
+
+    Secret = **false**,
+
+    Objects = {}
+
+}
+
+**local** **function** **ClearESP**()
+
+    **for** \_, Object **in** **ipairs**(ESP.**Objects**) **do**
+
+        **if** Object **and** Object.**Parent** **then**
+
+            **pcall**(**function**()
+
+                Object:**Destroy**()
+
+            **end**)
+
+        **end**
+
+    **end**
+
+    table.**clear**(ESP.**Objects**)
+
+**end**
+
+**local** **function** **AddESP**(Egg, Text)
+
+    **if** **not** Egg **then**
+
+        **return**
+
+    **end**
+
+    **local** Part = **GetEggPart**(Egg)
+
+    **if** **not** Part **then**
+
+        **return**
+
+    **end**
+
+    **local** Highlight = Instance.**new**("Highlight")
+
+    Highlight.**Name** = "KerryHubESP"
+
+    Highlight.**Adornee** = Egg
+
+    Highlight.**DepthMode** =
+
+        Enum.**HighlightDepthMode**.**AlwaysOnTop**
+
+    Highlight.**FillTransparency** = 0.5
+
+    Highlight.**OutlineTransparency** = 0
+
+    Highlight.**Parent** = Egg
+
+    table.**insert**(ESP.**Objects**, Highlight)
+
+    **local** Billboard = Instance.**new**("BillboardGui")
+
+    Billboard.**Name** = "KerryHubESPLabel"
+
+    Billboard.**Adornee** = Part
+
+    Billboard.**Size** = UDim2.**fromOffset**(180, 40)
+
+    Billboard.**StudsOffset** = Vector3.**new**(0, 3, 0)
+
+    Billboard.**AlwaysOnTop** = **true**
+
+    Billboard.**Parent** = Part
+
+    **local** Label = Instance.**new**("TextLabel")
+
+    Label.**Size** = UDim2.**fromScale**(1, 1)
+
+    Label.**BackgroundTransparency** = 1
+
+    Label.**Text** = Text
+
+    Label.**TextScaled** = **true**
+
+    Label.**Font** = Enum.**Font**.**GothamBold**
+
+    Label.**TextStrokeTransparency** = 0
+
+    Label.**Parent** = Billboard
+
+    table.**insert**(ESP.**Objects**, Billboard)
+
+**end**
+
+**local** **function** **RefreshESP**()
+
+    **ClearESP**()
+
+    **if** ESP.**Biggest** **then**
+
+        **AddESP**(
+
+            **GetBiggestEgg**(),
+
+            "Biggest Egg"
+
+        )
+
+    **end**
+
+    **if** ESP.**Parasite** **then**
+
+        **AddESP**(
+
+            **GetParasiteEgg**(),
+
+            "Parasite Egg"
+
+        )
+
+    **end**
+
+    **if** ESP.**Secret** **then**
+
+        **AddESP**(
+
+            **GetSecretEgg**(),
+
+            "Secret Egg"
+
+        )
+
+    **end**
+
+**end**
+
+VisualTab:**CreateToggle**({
+
+    Name = "ESP Biggest Egg",
+
+    CurrentValue = **false**,
+
+    Flag = "ESPBiggest",
+
+    Callback = **function**(Value)
+
+        ESP.**Biggest** = Value
+
+        **RefreshESP**()
+
+    **end**
+
 })
 
---// SPEED SLIDER
-Main:CreateSlider({
-	Name = "Glide Speed",
-	Range = {100, 500},
-	Increment = 10,
-	Suffix = " studs/s",
-	CurrentValue = Speed,
-	Flag = "GlideSpeed",
+VisualTab:**CreateToggle**({
 
-	Callback = function(value)
-		Speed = value
-	end
+    Name = "ESP Parasite Egg",
+
+    CurrentValue = **false**,
+
+    Flag = "ESPParasite",
+
+    Callback = **function**(Value)
+
+        ESP.**Parasite** = Value
+
+        **RefreshESP**()
+
+    **end**
+
 })
 
---// BASE INPUT
-Main:CreateInput({
-	Name = "Base Number",
-	PlaceholderText = "10",
-	RemoveTextAfterFocusLost = false,
+VisualTab:**CreateToggle**({
 
-	Callback = function(value)
-		local number = tonumber(value)
+    Name = "ESP Secret Egg",
 
-		if number then
-			BaseNumber = math.max(1, math.floor(number))
+    CurrentValue = **false**,
 
-			Rayfield:Notify({
-				Title = "Base Selected",
-				Content = "Base #" .. BaseNumber,
-				Duration = 2
-			})
-		end
-	end
+    Flag = "ESPSecret",
+
+    Callback = **function**(Value)
+
+        ESP.**Secret** = Value
+
+        **RefreshESP**()
+
+    **end**
+
 })
 
-Rayfield:Notify({
-	Title = "Egg Stealer",
-	Content = "Loaded successfully!",
-	Duration = 3
+VisualTab:**CreateButton**({
+
+    Name = "Clear ESP",
+
+    Callback = **function**()
+
+        ESP.**Biggest** = **false**
+
+        ESP.**Parasite** = **false**
+
+        ESP.**Secret** = **false**
+
+        **ClearESP**()
+
+    **end**
+
+})
+
+task.**spawn**(**function**()
+
+    **while** task.**wait**(0.75) **do**
+
+        **if** ESP.**Biggest**
+
+            **or** ESP.**Parasite**
+
+            **or** ESP.**Secret** **then**
+
+            **RefreshESP**()
+
+        **end**
+
+    **end**
+
+**end**)
+
+*--==================================================*
+
+*-- FIND PROMPT*
+
+*--==================================================*
+
+**local** **function** **FindInteractionPrompt**(Egg)
+
+    **if** **not** Egg **then**
+
+        **return** **nil**
+
+    **end**
+
+    **for** \_, Object **in** **ipairs**(Egg:**GetDescendants**()) **do**
+
+        **if** Object:**IsA**("ProximityPrompt") **then**
+
+            **return** Object
+
+        **end**
+
+    **end**
+
+    **return** **nil**
+
+**end**
+
+*--==================================================*
+
+*-- FIND CURRENT TARGET*
+
+*--*
+
+*-- If the original egg gets replaced by the game,*
+
+*-- this searches again instead of declaring Target Lost.*
+
+*--==================================================*
+
+**local** **function** **AcquireTarget**()
+
+    **local** Target = **GetTargetEgg**()
+
+    **if** Target **then**
+
+        AutoFarm.**Target** = Target
+
+    **end**
+
+    **return** Target
+
+**end**
+
+*--==================================================*
+
+*-- MOVE TO EGG*
+
+*--==================================================*
+
+**local** **function** **MoveToEgg**(CycleId)
+
+    **local** Timeout = os.**clock**() + 30
+
+    **while** AutoFarm.**Enabled**
+
+        **and** AutoFarm.**Running**
+
+        **and** AutoFarm.**CycleId** == CycleId **do**
+
+        **if** **not** Character **or** **not** RootPart **then**
+
+            **return** **false**
+
+        **end**
+
+        **local** Egg = AutoFarm.**Target**
+
+        *-- Reacquire target whenever necessary.*
+
+        **if** **not** Egg **or** **not** Egg.**Parent** **then**
+
+            Egg = **AcquireTarget**()
+
+            **if** **not** Egg **then**
+
+                task.**wait**(0.25)
+
+                **if** os.**clock**() > Timeout **then**
+
+                    Timeout = os.**clock**() + 30
+
+                **end**
+
+                **continue**
+
+            **end**
+
+        **end**
+
+        **local** Part = **GetEggPart**(Egg)
+
+        **if** **not** Part **or** **not** Part.**Parent** **then**
+
+            AutoFarm.**Target** = **nil**
+
+            task.**wait**(0.1)
+
+            **continue**
+
+        **end**
+
+        **local** Difference =
+
+            Part.**Position** - RootPart.**Position**
+
+        **local** Distance = Difference.**Magnitude**
+
+        **if** Distance <= 5 **then**
+
+            **return** **true**
+
+        **end**
+
+        **if** Distance > 10000 **then**
+
+            AutoFarm.**Target** = **nil**
+
+            task.**wait**(0.1)
+
+            **continue**
+
+        **end**
+
+        **local** Direction = Difference.**Unit**
+
+        **local** Speed = math.**max**(
+
+            CFrameSpeed,
+
+            25
+
+        )
+
+        **local** Step = math.**min**(
+
+            Distance,
+
+            Speed \* 0.03
+
+        )
+
+        Character:**PivotTo**(
+
+            Character:**GetPivot**()
+
+            + Direction \* Step
+
+        )
+
+        task.**wait**()
+
+    **end**
+
+    **return** **false**
+
+**end**
+
+*--==================================================*
+
+*-- HOLD E*
+
+*--==================================================*
+
+**local** **function** **HoldPrompt**(Prompt, CycleId)
+
+    **if** **not** Prompt **then**
+
+        **return** **false**
+
+    **end**
+
+    **if** **not** Prompt.**Parent** **then**
+
+        **return** **false**
+
+    **end**
+
+    **if** **not** Prompt.**Enabled** **then**
+
+        **return** **false**
+
+    **end**
+
+    **local** HoldDuration =
+
+        **tonumber**(Prompt.**HoldDuration**) **or** 0
+
+    **local** Success = **pcall**(**function**()
+
+        Prompt:**InputHoldBegin**()
+
+    **end**)
+
+    **if** **not** Success **then**
+
+        **return** **false**
+
+    **end**
+
+    **local** StartTime = os.**clock**()
+
+    **while** AutoFarm.**Enabled**
+
+        **and** AutoFarm.**Running**
+
+        **and** AutoFarm.**CycleId** == CycleId **do**
+
+        **local** Required =
+
+            math.**max**(HoldDuration + 0.25, 0.5)
+
+        **if** os.**clock**() - StartTime >= Required **then**
+
+            **break**
+
+        **end**
+
+        task.**wait**(0.05)
+
+    **end**
+
+    **pcall**(**function**()
+
+        Prompt:**InputHoldEnd**()
+
+    **end**)
+
+    **return** AutoFarm.**Enabled**
+
+        **and** AutoFarm.**Running**
+
+        **and** AutoFarm.**CycleId** == CycleId
+
+**end**
+
+*--==================================================*
+
+*-- GROUND*
+
+*--==================================================*
+
+**local** **function** **FindGroundDestination**()
+
+    **local** World = workspace:**FindFirstChild**("World")
+
+    **if** **not** World **then**
+
+        **return** **nil**
+
+    **end**
+
+    **local** Areas = World:**FindFirstChild**("Areas")
+
+    **if** **not** Areas **then**
+
+        **return** **nil**
+
+    **end**
+
+    **local** Ground = Areas:**FindFirstChild**("Ground")
+
+    **if** **not** Ground **then**
+
+        **return** **nil**
+
+    **end**
+
+    **if** Ground:**IsA**("BasePart") **then**
+
+        **return** Ground
+
+    **end**
+
+    **if** Ground:**IsA**("Model") **then**
+
+        **if** Ground.**PrimaryPart** **then**
+
+            **return** Ground.**PrimaryPart**
+
+        **end**
+
+        **for** \_, Object **in** **ipairs**(
+
+            Ground:**GetDescendants**()
+
+        ) **do**
+
+            **if** Object:**IsA**("BasePart") **then**
+
+                **return** Object
+
+            **end**
+
+        **end**
+
+    **end**
+
+    **for** \_, Object **in** **ipairs**(
+
+        Ground:**GetDescendants**()
+
+    ) **do**
+
+        **if** Object:**IsA**("BasePart") **then**
+
+            **return** Object
+
+        **end**
+
+    **end**
+
+    **return** **nil**
+
+**end**
+
+*--==================================================*
+
+*-- GLIDE TO GROUND*
+
+*--==================================================*
+
+**local** **function** **GlideToGround**(Ground, CycleId)
+
+    **if** **not** Ground **then**
+
+        **return** **false**
+
+    **end**
+
+    **while** AutoFarm.**Enabled**
+
+        **and** AutoFarm.**Running**
+
+        **and** AutoFarm.**CycleId** == CycleId **do**
+
+        **if** **not** Character **or** **not** RootPart **then**
+
+            **return** **false**
+
+        **end**
+
+        **if** **not** Ground.**Parent** **then**
+
+            Ground = **FindGroundDestination**()
+
+            **if** **not** Ground **then**
+
+                **return** **false**
+
+            **end**
+
+        **end**
+
+        **local** TargetPosition =
+
+            Ground.**Position** + Vector3.**new**(0, 3, 0)
+
+        **local** Difference =
+
+            TargetPosition - RootPart.**Position**
+
+        **local** Distance = Difference.**Magnitude**
+
+        **if** Distance <= 5 **then**
+
+            **return** **true**
+
+        **end**
+
+        **local** Direction = Difference.**Unit**
+
+        **local** Speed = math.**max**(
+
+            CFrameSpeed,
+
+            25
+
+        )
+
+        **local** Step = math.**min**(
+
+            Distance,
+
+            Speed \* 0.025
+
+        )
+
+        Character:**PivotTo**(
+
+            Character:**GetPivot**()
+
+            + Direction \* Step
+
+        )
+
+        task.**wait**()
+
+    **end**
+
+    **return** **false**
+
+**end**
+
+*--==================================================*
+
+*-- DELIVERY PROMPT*
+
+*--==================================================*
+
+**local** **function** **FindDeliveryPrompt**(Ground)
+
+    **if** **not** Ground **then**
+
+        **return** **nil**
+
+    **end**
+
+    **if** Ground:**IsA**("ProximityPrompt") **then**
+
+        **return** Ground
+
+    **end**
+
+    **for** \_, Object **in** **ipairs**(
+
+        Ground:**GetDescendants**()
+
+    ) **do**
+
+        **if** Object:**IsA**("ProximityPrompt") **then**
+
+            **return** Object
+
+        **end**
+
+    **end**
+
+    **return** **nil**
+
+**end**
+
+*--==================================================*
+
+*-- DELIVERY*
+
+*--==================================================*
+
+**local** **function** **CompleteDelivery**(Ground, CycleId)
+
+    **local** Prompt = **FindDeliveryPrompt**(Ground)
+
+    *-- If delivery happens automatically at Ground.*
+
+    **if** **not** Prompt **then**
+
+        **return** **true**
+
+    **end**
+
+    **if** **not** Prompt.**Enabled** **then**
+
+        **return** **true**
+
+    **end**
+
+    **local** HoldDuration =
+
+        **tonumber**(Prompt.**HoldDuration**) **or** 0
+
+    **local** Success = **pcall**(**function**()
+
+        Prompt:**InputHoldBegin**()
+
+    **end**)
+
+    **if** **not** Success **then**
+
+        **return** **false**
+
+    **end**
+
+    **local** StartTime = os.**clock**()
+
+    **while** AutoFarm.**Enabled**
+
+        **and** AutoFarm.**Running**
+
+        **and** AutoFarm.**CycleId** == CycleId **do**
+
+        **local** Required =
+
+            math.**max**(HoldDuration + 0.25, 0.5)
+
+        **if** os.**clock**() - StartTime >= Required **then**
+
+            **break**
+
+        **end**
+
+        task.**wait**(0.05)
+
+    **end**
+
+    **pcall**(**function**()
+
+        Prompt:**InputHoldEnd**()
+
+    **end**)
+
+    **return** **true**
+
+**end**
+
+*--==================================================*
+
+*-- ONE FARM CYCLE*
+
+*--==================================================*
+
+**local** **function** **RunAutoFarmCycle**(CycleId)
+
+    *-- Get a fresh target every cycle.*
+
+    **local** Egg = **AcquireTarget**()
+
+    **if** **not** Egg **then**
+
+        task.**wait**(0.5)
+
+        **return**
+
+    **end**
+
+    *-- Move without permanently locking onto an old*
+
+    *-- destroyed/replaced egg reference.*
+
+    **if** **not** **MoveToEgg**(CycleId) **then**
+
+        AutoFarm.**Target** = **nil**
+
+        **return**
+
+    **end**
+
+    **if** **not** AutoFarm.**Enabled**
+
+        **or** **not** AutoFarm.**Running**
+
+        **or** AutoFarm.**CycleId** \~= CycleId **then**
+
+        **return**
+
+    **end**
+
+    *-- Get the prompt AFTER reaching the egg.*
+
+    *-- This is important because the game may recreate it.*
+
+    **local** CurrentEgg = AutoFarm.**Target**
+
+    **local** Prompt = **FindInteractionPrompt**(CurrentEgg)
+
+    **if** **not** Prompt **then**
+
+        AutoFarm.**Target** = **nil**
+
+        **return**
+
+    **end**
+
+    *-- Hold E.*
+
+    **if** **not** **HoldPrompt**(Prompt, CycleId) **then**
+
+        AutoFarm.**Target** = **nil**
+
+        **return**
+
+    **end**
+
+    *-- Don't check whether the egg model disappeared.*
+
+    *-- Continue to the destination after successful hold.*
+
+    task.**wait**(0.2)
+
+    *-- Ground destination.*
+
+    **local** Ground = **FindGroundDestination**()
+
+    **if** **not** Ground **then**
+
+        AutoFarm.**Target** = **nil**
+
+        **return**
+
+    **end**
+
+    AutoFarm.**Destination** = Ground
+
+    *-- Glide.*
+
+    **if** **not** **GlideToGround**(
+
+        Ground,
+
+        CycleId
+
+    ) **then**
+
+        AutoFarm.**Target** = **nil**
+
+        AutoFarm.**Destination** = **nil**
+
+        **return**
+
+    **end**
+
+    *-- Delivery.*
+
+    **CompleteDelivery**(
+
+        Ground,
+
+        CycleId
+
+    )
+
+    AutoFarm.**Target** = **nil**
+
+    AutoFarm.**Destination** = **nil**
+
+**end**
+
+*--==================================================*
+
+*-- START AUTO FARM*
+
+*--==================================================*
+
+**local** **function** **StartAutoFarm**()
+
+    **if** AutoFarm.**Running** **then**
+
+        **return**
+
+    **end**
+
+    AutoFarm.**Enabled** = **true**
+
+    AutoFarm.**Running** = **true**
+
+    AutoFarm.**CycleId** += 1
+
+    **local** MyCycle = AutoFarm.**CycleId**
+
+    task.**spawn**(**function**()
+
+        **while** AutoFarm.**Enabled**
+
+            **and** AutoFarm.**Running**
+
+            **and** AutoFarm.**CycleId** == MyCycle **do**
+
+            **RunAutoFarmCycle**(MyCycle)
+
+            task.**wait**(0.25)
+
+        **end**
+
+        **if** AutoFarm.**CycleId** == MyCycle **then**
+
+            AutoFarm.**Running** = **false**
+
+        **end**
+
+    **end**)
+
+**end**
+
+*--==================================================*
+
+*-- STOP AUTO FARM*
+
+*--==================================================*
+
+**local** **function** **StopAutoFarm**()
+
+    AutoFarm.**Enabled** = **false**
+
+    AutoFarm.**Running** = **false**
+
+    AutoFarm.**CycleId** += 1
+
+    AutoFarm.**Target** = **nil**
+
+    AutoFarm.**Destination** = **nil**
+
+**end**
+
+*--==================================================*
+
+*-- AUTO FARM UI*
+
+*--==================================================*
+
+AutoFarmTab:**CreateDropdown**({
+
+    Name = "Egg Mode",
+
+    Options = {
+
+        "Biggest Egg",
+
+        "Parasite Egg",
+
+        "Secret Egg"
+
+    },
+
+    CurrentOption = {"Biggest Egg"},
+
+    MultipleOptions = **false**,
+
+    Flag = "EggMode",
+
+    Callback = **function**(Option)
+
+        **if** **typeof**(Option) == "table" **then**
+
+            AutoFarm.**Mode** = Option[1]
+
+        **else**
+
+            AutoFarm.**Mode** = Option
+
+        **end**
+
+        *-- Force the next cycle to use the new mode.*
+
+        AutoFarm.**Target** = **nil**
+
+    **end**
+
+})
+
+AutoFarmTab:**CreateToggle**({
+
+    Name = "Auto Farm",
+
+    CurrentValue = **false**,
+
+    Flag = "AutoFarm",
+
+    Callback = **function**(Value)
+
+        **if** Value **then**
+
+            **StartAutoFarm**()
+
+        **else**
+
+            **StopAutoFarm**()
+
+        **end**
+
+    **end**
+
+})
+
+*--==================================================*
+
+*-- RESPAWN*
+
+*--==================================================*
+
+LocalPlayer.**CharacterAdded**:**Connect**(**function**(Char)
+
+    AutoFarm.**CycleId** += 1
+
+    AutoFarm.**Running** = **false**
+
+    AutoFarm.**Target** = **nil**
+
+    AutoFarm.**Destination** = **nil**
+
+    **SetupCharacter**(Char)
+
+    **if** AutoFarm.**Enabled** **then**
+
+        task.**wait**(1)
+
+        **StartAutoFarm**()
+
+    **end**
+
+**end**)
+
+*--==================================================*
+
+*-- INFO*
+
+*--==================================================*
+
+InfoTab:**CreateParagraph**({
+
+    Title = "KerryHub",
+
+    Content =
+
+        "Auto Farm + Egg ESP + CFrame movement"
+
+})
+
+InfoTab:**CreateParagraph**({
+
+    Title = "Auto Farm",
+
+    Content =
+
+        "Select an egg type and enable Auto Farm."
+
+})
+
+InfoTab:**CreateParagraph**({
+
+    Title = "Egg Types",
+
+    Content =
+
+        "Biggest Egg = largest volume\n" ..
+
+        
+        "Secret Egg = object/effect named fx"
+
 })
